@@ -1,0 +1,271 @@
+@page
+@model ServerModel
+@{
+    ViewData["Title"] = "Server Console";
+    ViewData["ActivePage"] = "Server";
+}
+
+<h4 class="mb-4"><i class="bi bi-terminal-fill me-2 text-warning"></i>Server Console (RCON)</h4>
+
+<!-- Server Selector -->
+<div class="row mb-3">
+  <div class="col-md-6">
+    <div class="input-group">
+      <span class="input-group-text bg-dark border-secondary text-muted" style="font-size:.8rem">SERVER</span>
+      <select id="serverSelector" class="form-select bg-dark text-light border-secondary" onchange="loadServerInfo()">
+        <option value="">-- Đang tải... --</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Nav tabs -->
+<ul class="nav nav-tabs border-secondary mb-3" id="consoleTab">
+  <li class="nav-item">
+    <button class="nav-link active text-warning" onclick="switchTab('system',this)">⚙️ System Servers</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link text-secondary" onclick="switchTab('rooms',this)">🚪 Player Rooms</button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link text-secondary" onclick="switchTab('tournaments',this)">🏅 Tournament Rooms</button>
+  </li>
+</ul>
+
+<!-- Tab: System Servers (RCON) -->
+<div id="tab-system">
+<div class="row g-3">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-header">Quick Commands</div>
+      <div class="card-body p-2">
+        @foreach (var cmd in new[] { "status", "mp_restartgame 1", "changelevel de_dust2", "changelevel de_inferno", "changelevel cs_assault", "sv_cheats 0", "mp_timelimit 30", "mp_roundtime 2", "bot_kick", "amx_who" })
+        {
+          <button class="btn btn-outline-secondary btn-sm w-100 text-start mb-1" onclick="sendCmd('@cmd')">@cmd</button>
+        }
+      </div>
+    </div>
+    <!-- Send Message to Server -->
+    <div class="card mt-3">
+      <div class="card-header">📢 Admin Message</div>
+      <div class="card-body p-2">
+        <input type="text" id="adminMsg" class="form-control form-control-sm bg-dark text-light border-secondary mb-2" placeholder="Thông báo..."/>
+        <button class="btn btn-warning btn-sm w-100" onclick="sendAdminMsg()">Gửi</button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-9">
+    <div class="card mb-3">
+      <div class="card-header d-flex justify-content-between">
+        <span>Output</span>
+        <button class="btn btn-sm btn-outline-danger" onclick="clearOutput()">Clear</button>
+      </div>
+      <div class="card-body p-0">
+        <div id="terminal" class="terminal p-3" style="height:400px; overflow-y:auto; font-size:.85rem;">
+          <span class="text-muted">// Server console ready. Select server và nhập lệnh...</span><br>
+        </div>
+      </div>
+    </div>
+    <div class="input-group">
+      <span class="input-group-text bg-dark border-secondary text-success" style="font-family:monospace">$</span>
+      <input type="text" id="cmdInput" class="form-control bg-dark text-light border-secondary"
+             placeholder="nhập lệnh RCON..." style="font-family:monospace;"
+             onkeydown="if(event.key==='Enter') sendFromInput()" />
+      <button class="btn btn-primary" onclick="sendFromInput()"><i class="bi bi-send me-1"></i>Send</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Tab: Player Rooms -->
+<div id="tab-rooms" class="d-none">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-info mb-0">Phòng chơi người dùng đang hoạt động</h6>
+    <button class="btn btn-sm btn-outline-info" onclick="loadPlayerRooms()">🔄 Làm mới</button>
+  </div>
+  <div id="player-rooms-list">
+    <div class="text-muted text-center p-4">Đang tải...</div>
+  </div>
+</div>
+
+<!-- Tab: Tournament Rooms -->
+<div id="tab-tournaments" class="d-none">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-warning mb-0">Phòng thi đấu giải đấu</h6>
+    <button class="btn btn-sm btn-outline-warning" onclick="loadTournamentRooms()">🔄 Làm mới</button>
+  </div>
+  <div id="tournament-rooms-list">
+    <div class="text-muted text-center p-4">Đang tải...</div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+const API_URL = '@Model.ApiUrl';
+const terminal = document.getElementById('terminal');
+let currentServerId = null;
+
+// Load server list on page load
+async function loadServers() {
+  try {
+    const r = await fetch(`${API_URL}/api/servers`);
+    const servers = await r.json();
+    const sel = document.getElementById('serverSelector');
+    sel.innerHTML = servers.map(s => `<option value="${s.id}">${s.name} (${s.host}:${s.port})</option>`).join('');
+    if (servers.length) {
+      currentServerId = servers[0].id;
+    }
+  } catch(e) { console.error('Load servers failed:', e); }
+}
+
+function loadServerInfo() {
+  const sel = document.getElementById('serverSelector');
+  currentServerId = parseInt(sel.value) || null;
+}
+
+async function sendCmd(cmd) {
+  terminal.innerHTML += `<span class="text-cyan">&gt; ${cmd}</span><br>`;
+  try {
+    const r = await fetch(`${API_URL}/api/rcon/command`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ command: cmd, serverId: currentServerId })
+    });
+    const d = await r.json();
+    terminal.innerHTML += `<span class="text-success">${(d.response || '').replace(/\n/g,'<br>')}</span><br>`;
+  } catch(e) {
+    terminal.innerHTML += `<span class="text-danger">Error: ${e.message}</span><br>`;
+  }
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+async function sendAdminMsg() {
+  const msg = document.getElementById('adminMsg').value.trim();
+  if (!msg) return;
+  await sendCmd(`say [ADMIN] ${msg}`);
+  document.getElementById('adminMsg').value = '';
+}
+
+function sendFromInput() {
+  const input = document.getElementById('cmdInput');
+  if (input.value.trim()) { sendCmd(input.value.trim()); input.value = ''; }
+}
+
+function clearOutput() {
+  terminal.innerHTML = '<span class="text-muted">// Cleared.</span><br>';
+}
+
+function switchTab(tab, btn) {
+  document.getElementById('tab-system').classList.add('d-none');
+  document.getElementById('tab-rooms').classList.add('d-none');
+  document.getElementById('tab-tournaments').classList.add('d-none');
+  document.getElementById(`tab-${tab}`).classList.remove('d-none');
+  document.querySelectorAll('#consoleTab .nav-link').forEach(b => b.classList.remove('active','text-warning'));
+  btn.classList.add('active','text-warning');
+  if (tab === 'rooms') loadPlayerRooms();
+  if (tab === 'tournaments') loadTournamentRooms();
+}
+
+/* ── Player Rooms ── */
+async function loadPlayerRooms() {
+  const el = document.getElementById('player-rooms-list');
+  try {
+    const r = await fetch(`${API_URL}/api/rooms`);
+    const rooms = await r.json();
+    if (!rooms.length) { el.innerHTML = '<p class="text-muted text-center p-4">Không có phòng nào đang mở.</p>'; return; }
+    el.innerHTML = `<div class="table-responsive"><table class="table table-dark table-hover table-sm">
+      <thead><tr><th>Tên phòng</th><th>Map</th><th>Format</th><th>Port</th><th>Host</th><th>Thao tác</th></tr></thead>
+      <tbody>
+        ${rooms.map(r => `<tr>
+          <td>${escHtml(r.roomName)}</td>
+          <td><span class="badge bg-secondary">${r.mapName}</span></td>
+          <td><span class="badge bg-warning text-dark">${r.format}</span></td>
+          <td><span class="badge bg-info text-dark">${r.port}</span></td>
+          <td class="text-muted" style="font-size:.8rem">${r.hostPlayerId?.substring(0,8)}...</td>
+          <td>
+            <button class="btn btn-sm btn-outline-danger me-1" onclick="kickFromRoom('${r.id}')">⛔ Kick</button>
+            <button class="btn btn-sm btn-outline-warning" onclick="msgToRoom('${r.id}')">📢 Nhắn</button>
+          </td>
+        </tr>`).join('')}
+      </tbody></table></div>`;
+  } catch(e) { el.innerHTML = `<div class="text-danger p-4">Lỗi: ${e.message}</div>`; }
+}
+
+async function kickFromRoom(roomId) {
+  const userId = prompt('User ID cần kick:');
+  if (!userId) return;
+  try {
+    const r = await fetch(`${API_URL}/api/rooms/${roomId}/kick`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ userId })
+    });
+    const d = await r.json();
+    alert(d.kicked ? 'Đã kick!' : (d.error || 'Thất bại'));
+  } catch(e) { alert('Lỗi: ' + e.message); }
+}
+
+async function msgToRoom(roomId) {
+  const msg = prompt('Tin nhắn Admin:');
+  if (!msg) return;
+  try {
+    await fetch(`${API_URL}/api/rooms/${roomId}/message`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ message: msg })
+    });
+    alert('Đã gửi!');
+  } catch(e) { alert('Lỗi: ' + e.message); }
+}
+
+/* ── Tournament Rooms ── */
+async function loadTournamentRooms() {
+  const el = document.getElementById('tournament-rooms-list');
+  try {
+    const r = await fetch(`${API_URL}/api/tournaments`);
+    const tours = await r.json();
+    if (!tours.length) { el.innerHTML = '<p class="text-muted text-center p-4">Chưa có giải đấu nào.</p>'; return; }
+
+    let html = '';
+    for (const t of tours) {
+      const mr = await fetch(`${API_URL}/api/tournaments/${t.id}/matches`);
+      const matches = await mr.json();
+      if (!matches.length) continue;
+      html += `<div class="mb-3">
+        <h6 class="text-warning mb-2">🏅 ${escHtml(t.title)}</h6>
+        <div class="table-responsive"><table class="table table-dark table-hover table-sm">
+          <thead><tr><th>Phòng</th><th>Map</th><th>Team A</th><th>Team B</th><th>Tỉ số</th><th>Port</th><th>Thao tác</th></tr></thead>
+          <tbody>
+            ${matches.map(m => `<tr>
+              <td><code class="text-info" style="font-size:.8rem">${m.roomCode}</code></td>
+              <td><span class="badge bg-secondary">${m.mapName}</span></td>
+              <td>${escHtml(m.teamA)||'–'}</td>
+              <td>${escHtml(m.teamB)||'–'}</td>
+              <td><strong>${m.scoreA} : ${m.scoreB}</strong></td>
+              <td>${m.port||'–'}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-warning" onclick="msgToTourMatch('${m.id}')">📢 Nhắn</button>
+              </td>
+            </tr>`).join('')}
+          </tbody></table></div></div>`;
+    }
+    el.innerHTML = html || '<p class="text-muted text-center p-4">Không có trận đang diễn ra.</p>';
+  } catch(e) { el.innerHTML = `<div class="text-danger p-4">Lỗi: ${e.message}</div>`; }
+}
+
+async function msgToTourMatch(matchId) {
+  const msg = prompt('Tin nhắn Admin vào phòng đấu:');
+  if (!msg) return;
+  // Tournament match reuse RCON via serverId if port known
+  alert(`Tính năng gửi tin nhắn vào phòng đấu sẽ cần RCON trực tiếp vào port của container.`);
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Init
+window.onload = () => {
+  loadServers();
+  sendCmd('status');
+};
+</script>
+}

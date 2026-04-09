@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Api/Api.csproj" />
+  <Project Path="Dashboard/Dashboard.csproj" />
+  <Project Path="Launcher/Launcher.csproj" />
+</Solution>

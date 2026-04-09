@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CS 1.6 VN Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <!-- Video background: WebM VP9 (primary) + MP4 fallback -->
+  <!-- WebM VP9 dùng software decode → hiển thị đúng trên Windows -->
+  <video id="bg-video" autoplay muted loop playsinline>
+    <source src="../assets/bg.webm" type="video/webm">
+    <source src="../assets/bg.mp4" type="video/mp4">
+  </video>
+
+  <!-- Custom Titlebar -->
+  <div class="titlebar">
+    <div class="titlebar-logo">
+      <img src="../assets/icon.png" width="22" height="22" alt="CS16"/>
+      <span>CS 1.6 VN LAUNCHER</span>
+    </div>
+    <div class="titlebar-controls">
+      <button onclick="window.cs16.minimizeWindow()" title="Thu nhỏ">─</button>
+      <button onclick="window.cs16.closeWindow()" class="close-btn" title="Đóng">✕</button>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: AUTH ──────────────────────────────────────────────────── -->
+  <div id="screen-auth" class="screen active">
+    <div class="auth-bg">
+      <div class="auth-bg-overlay"></div>
+      <div class="scanlines"></div>
+    </div>
+
+    <div class="auth-container">
+      <!-- LEFT: Branding -->
+      <div class="auth-brand">
+        <div class="brand-badge">VIETNAM SERVER</div>
+        <img src="../assets/icon.png" class="brand-logo" alt="CS16"/>
+        <h1 class="brand-title">COUNTER-STRIKE</h1>
+        <p class="brand-subtitle">1.6 · VN COMMUNITY EDITION</p>
+        <div class="brand-stats" id="brand-stats">
+          <div class="stat"><span class="stat-num" id="stat-online">–</span><span class="stat-label">ONLINE</span></div>
+          <div class="stat-sep">|</div>
+          <div class="stat"><span class="stat-num" id="stat-players">–</span><span class="stat-label">PLAYERS</span></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Forms -->
+      <div class="auth-panel">
+        <!-- API URL quick-set (visible before login) -->
+      <div class="api-url-bar">
+        <span class="api-url-label">🌐 API</span>
+        <input id="api-url-quick" type="text" placeholder="http://192.168.1.2:7777" spellcheck="false"/>
+        <button onclick="saveApiUrl()" class="btn-save-api">LƯU</button>
+      </div>
+
+      <!-- Tabs -->
+        <div class="auth-tabs">
+          <button class="tab active" data-tab="login">ĐĂNG NHẬP</button>
+          <button class="tab" data-tab="register">ĐĂNG KÝ</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <div id="tab-login" class="tab-content active">
+          <div class="form-group">
+            <label>TÊN ĐĂNG NHẬP / EMAIL</label>
+            <input id="login-username" type="text" placeholder="Username hoặc email@example.com" autocomplete="username"/>
+          </div>
+          <div class="form-group">
+            <label>MẬT KHẨU</label>
+            <div class="input-wrap">
+              <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"/>
+              <button class="toggle-pw" onclick="togglePw('login-password',this)">👁</button>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-ghost-sm" onclick="showForgot()">Quên mật khẩu?</button>
+          </div>
+          <div id="login-error" class="form-error"></div>
+          <button id="btn-login" class="btn-primary" onclick="doLogin()">
+            <span class="btn-text">ĐĂNG NHẬP</span>
+            <span class="btn-loader hidden">⟳</span>
+          </button>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div id="tab-register" class="tab-content">
+          <div class="form-group">
+            <label>TÊN ĐĂNG NHẬP</label>
+            <input id="reg-username" type="text" placeholder="VD: ProGamer_VN"/>
+          </div>
+          <div class="form-group">
+            <label>EMAIL</label>
+            <input id="reg-email" type="email" placeholder="email@example.com"/>
+          </div>
+          <div class="form-group">
+            <label>MẬT KHẨU</label>
+            <div class="input-wrap">
+              <input id="reg-password" type="password" placeholder="Tối thiểu 8 ký tự"/>
+              <button class="toggle-pw" onclick="togglePw('reg-password',this)">👁</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>XÁC NHẬN MẬT KHẨU</label>
+            <input id="reg-confirm" type="password" placeholder="Nhập lại mật khẩu"/>
+          </div>
+          <div id="reg-error" class="form-error"></div>
+          <div id="reg-success" class="form-success hidden"></div>
+          <button id="btn-register" class="btn-primary" onclick="doRegister()">
+            <span class="btn-text">TẠO TÀI KHOẢN</span>
+            <span class="btn-loader hidden">⟳</span>
+          </button>
+        </div>
+
+        <!-- FORGOT PASSWORD -->
+        <div id="tab-forgot" class="tab-content">
+          <p class="forgot-hint">Nhập email đã đăng ký. Chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
+          <div class="form-group">
+            <label>EMAIL</label>
+            <input id="forgot-email" type="email" placeholder="email@example.com"/>
+          </div>
+          <div id="forgot-msg" class="form-success hidden"></div>
+          <div id="forgot-error" class="form-error"></div>
+          <button id="btn-forgot" class="btn-primary" onclick="doForgot()">
+            <span class="btn-text">GỬI YÊU CẦU</span>
+          </button>
+          <button class="btn-ghost mt-8" onclick="showTab('login')">← Quay lại đăng nhập</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN: MAIN ──────────────────────────────────────────────────── -->
+  <div id="screen-main" class="screen">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-user">
+        <div class="user-avatar">
+          <span id="sidebar-avatar-letter">?</span>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-username">–</div>
+          <div class="user-rank" id="sidebar-rank">Rank #–</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+          <span class="nav-icon">🏠</span> TRANG CHỦ
+        </button>
+        <button class="nav-btn" data-page="servers" onclick="showPage('servers')">
+          <span class="nav-icon">🎮</span> MÁY CHỦ
+        </button>
+        <button class="nav-btn" data-page="rooms" onclick="showPage('rooms')">
+          <span class="nav-icon">🚪</span> TẠO PHÒNG
+        </button>
+        <button class="nav-btn" data-page="tournaments" onclick="showPage('tournaments')">
+          <span class="nav-icon">🏅</span> GIẢI ĐẤU
+        </button>
+        <button class="nav-btn nav-btn-kyc-only hidden" id="nav-create-tournament" data-page="create-tournament" onclick="showPage('create-tournament')">
+          <span class="nav-icon">➕</span> TẠO GIẢI
+        </button>
+        <button class="nav-btn" data-page="rankings" onclick="showPage('rankings')">
+          <span class="nav-icon">🏆</span> BẢNG XẾP HẠNG
+        </button>
+        <button class="nav-btn" data-page="kyc" onclick="showPage('kyc')">
+          <span class="nav-icon">📋</span> XÁC MINH KYC
+        </button>
+        <button class="nav-btn" data-page="donate" onclick="showPage('donate')">
+          <span class="nav-icon">💖</span> DONATE
+        </button>
+        <button class="nav-btn" data-page="help" onclick="showPage('help')">
+          <span class="nav-icon">❓</span> HƯỚNG DẪN
+        </button>
+        <button class="nav-btn" data-page="about" onclick="showPage('about')">
+          <span class="nav-icon">ℹ️</span> GIỚI THIỆU
+        </button>
+        <button class="nav-btn" data-page="settings" onclick="showPage('settings')">
+          <span class="nav-icon">⚙️</span> CÀI ĐẶT
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-logout" onclick="doLogout()">⏻ ĐĂNG XUẤT</button>
+        <div class="sidebar-version">v1.0.0-beta</div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+      <!-- PAGE: HOME -->
+      <div id="page-home" class="page active">
+        <div class="hero-banner">
+          <div class="hero-overlay"></div>
+          <div class="hero-content">
+            <h1>SẴN SÀNG CHIẾN?</h1>
+            <p>Server đang hoạt động · <span id="home-online">0</span> người chơi online</p>
+            <button class="btn-play" onclick="showPage('servers')">
+              <span>▶ CHƠI NGAY</span>
+            </button>
+          </div>
+        </div>
+        <div class="home-stats-row">
+          <div class="hstat">
+            <div class="hstat-val" id="hstat-kills">–</div>
+            <div class="hstat-lab">KILLS</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-val" id="hstat-deaths">–</div>
+            <div class="hstat-lab">DEATHS</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-val" id="hstat-wins">–</div>
+            <div class="hstat-lab">THẮNG</div>
+          </div>
+          <div class="hstat">
+            <div class="hstat-val" id="hstat-kd">–</div>
+            <div class="hstat-lab">K/D</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: SERVERS -->
+      <div id="page-servers" class="page">
+        <div class="page-header">
+          <h2>MÁY CHỦ</h2>
+          <button class="btn-ghost-sm" onclick="loadServerBrowser()">⟳ Làm mới</button>
+        </div>
+
+        <!-- Server cards (populated by A2S_INFO query) -->
+        <div id="server-browser-list" class="server-browser-list">
+          <div class="server-card loading-card">
+            <span class="server-status-dot pulsing"></span>
+            <span style="color:var(--text2)">Đang kết nối đến server...</span>
+          </div>
+        </div>
+
+        <!-- CS path row -->
+        <div class="cs-path-section">
+          <label>Đường dẫn CS 1.6 (hl.exe / hl_linux / cstrike.exe)</label>
+          <div class="path-row">
+            <input id="cs-path-input" type="text" placeholder="Để trống = tự tìm theo Steam/thư mục mặc định" readonly/>
+            <button class="btn-ghost-sm" onclick="browseCS()">Duyệt...</button>
+          </div>
+          <p class="hint-text">Launcher sẽ tự tìm CS 1.6 nếu để trống. Chỉ cần chọn nếu tự động thất bại.</p>
+        </div>
+      </div>
+
+      <!-- PAGE: RANKINGS -->
+      <div id="page-rankings" class="page">
+        <div class="page-header">
+          <h2>BẢNG XẾP HẠNG</h2>
+          <button class="btn-ghost-sm" onclick="loadRankings()">⟳ Làm mới</button>
+        </div>
+        <table class="rank-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Tên</th><th>Kills</th><th>Deaths</th><th>K/D</th><th>Thắng</th>
+            </tr>
+          </thead>
+          <tbody id="rank-tbody">
+            <tr><td colspan="6" class="loading-row">Đang tải...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGE: KYC -->
+      <div id="page-kyc" class="page">
+        <div class="page-header"><h2>XÁC MINH KYC</h2></div>
+        <!-- KYC Approved State -->
+        <div id="kyc-approved-banner" class="kyc-approved-banner hidden">
+          <div class="kyc-approved-icon">✅</div>
+          <h3>Tài khoản đã được xác minh KYC</h3>
+          <p>Bạn đã được xác minh danh tính thành công. Bạn có thể tạo và tham gia giải đấu.</p>
+        </div>
+        <!-- KYC Form (hidden when approved) -->
+        <div id="kyc-form-area" class="kyc-container">
+          <div class="kyc-info">
+            <p>Xác minh danh tính để mở khóa tính năng <strong>nạp tiền &amp; giải đấu</strong>.</p>
+            <ul>
+              <li>📷 Ảnh CMND/CCCD mặt trước</li>
+              <li>📷 Ảnh CMND/CCCD mặt sau</li>
+              <li>🤳 Ảnh selfie cầm CMND</li>
+            </ul>
+          </div>
+          <div class="kyc-upload-area">
+            <div class="upload-slot" ondragover="event.preventDefault()" ondrop="dropFile(event,'kyc-front')">
+              <input type="file" id="kyc-front" accept="image/*" onchange="previewFile('kyc-front','prev-front')"/>
+              <label for="kyc-front">
+                <img id="prev-front" class="kyc-preview hidden" alt=""/>
+                <div class="upload-placeholder">📷 Mặt trước CMND</div>
+              </label>
+            </div>
+            <div class="upload-slot" ondragover="event.preventDefault()" ondrop="dropFile(event,'kyc-back')">
+              <input type="file" id="kyc-back" accept="image/*" onchange="previewFile('kyc-back','prev-back')"/>
+              <label for="kyc-back">
+                <img id="prev-back" class="kyc-preview hidden" alt=""/>
+                <div class="upload-placeholder">📷 Mặt sau CMND</div>
+              </label>
+            </div>
+            <div class="upload-slot" ondragover="event.preventDefault()" ondrop="dropFile(event,'kyc-selfie')">
+              <input type="file" id="kyc-selfie" accept="image/*" onchange="previewFile('kyc-selfie','prev-selfie')"/>
+              <label for="kyc-selfie">
+                <img id="prev-selfie" class="kyc-preview hidden" alt=""/>
+                <div class="upload-placeholder">🤳 Selfie + CMND</div>
+              </label>
+            </div>
+          </div>
+          <div id="kyc-msg" class="form-success hidden"></div>
+          <div id="kyc-error" class="form-error"></div>
+          <button class="btn-primary" onclick="submitKYC()">GỬI XÁC MINH</button>
+        </div>
+      </div>
+
+      <!-- PAGE: SETTINGS -->
+      <div id="page-settings" class="page">
+        <div class="page-header"><h2>CÀI ĐẶT</h2></div>
+        <div class="settings-section">
+          <h3>KẾT NỐI SERVER</h3>
+          <div class="form-group">
+            <label>API URL</label>
+            <input id="set-api-url" type="text" placeholder="http://localhost:7777"/>
+          </div>
+          <div class="form-group">
+            <label>IP GAME SERVER</label>
+            <input id="set-server-ip" type="text" placeholder="127.0.0.1"/>
+          </div>
+          <div class="form-group">
+            <label>PORT</label>
+            <input id="set-server-port" type="number" placeholder="27015"/>
+          </div>
+          <button class="btn-primary" onclick="saveSettings()">LƯU CÀI ĐẶT</button>
+          <div id="settings-msg" class="form-success hidden"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: TẠO PHÒNG -->
+      <div id="page-rooms" class="page">
+        <div class="page-header"><h2>🚪 TẠO PHÒNG CHƠI</h2></div>
+        <div class="form-card">
+          <div class="form-group">
+            <label>Tên phòng</label>
+            <input id="room-name" type="text" placeholder="VD: Phòng 1vs1 Dust2" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Thể thức</label>
+              <select id="room-format">
+                <option value="1vs1">1 vs 1</option>
+                <option value="3vs3">3 vs 3</option>
+                <option value="5vs5" selected>5 vs 5</option>
+                <option value="10vs10">10 vs 10</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Map</label>
+              <select id="room-map">
+                <option value="de_dust2">Dust 2</option>
+                <option value="de_inferno">Inferno</option>
+                <option value="de_nuke">Nuke</option>
+                <option value="cs_italy">Italy</option>
+                <option value="cs_assault">Assault</option>
+                <option value="de_train">Train</option>
+                <option value="de_mirage">Mirage</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mật khẩu phòng (tuỳ chọn)</label>
+            <input id="room-password" type="text" placeholder="Để trống = phòng công khai" />
+          </div>
+          <div id="room-msg" class="form-success hidden"></div>
+          <div id="room-error" class="form-error"></div>
+          <button class="btn-primary" onclick="createRoom()">🚪 TẠO PHÒNG</button>
+        </div>
+        <div class="page-header" style="margin-top:24px"><h3>Phòng đang hoạt động</h3></div>
+        <div id="rooms-list" class="rooms-list">Đang tải...</div>
+      </div>
+
+      <!-- PAGE: GIẢI ĐẤU -->
+      <div id="page-tournaments" class="page">
+        <div class="page-header">
+          <h2>🏅 GIẢI ĐẤU</h2>
+          <button class="btn-secondary" onclick="loadTournaments()">🔄 Làm mới</button>
+        </div>
+        <div id="tournaments-list" class="tournaments-list">Đang tải...</div>
+        <!-- Detail view -->
+        <div id="tournament-detail" class="hidden">
+          <button class="btn-back" onclick="document.getElementById('tournament-detail').classList.add('hidden');document.getElementById('tournaments-list').classList.remove('hidden')">← Quay lại</button>
+          <div id="tournament-detail-content"></div>
+        </div>
+      </div>
+
+      <!-- PAGE: TẠO GIẢI ĐẤU (KYC required) -->
+      <div id="page-create-tournament" class="page">
+        <div class="page-header"><h2>➕ TẠO GIẢI ĐẤU</h2></div>
+        <div class="form-card">
+          <div class="form-group">
+            <label>Tên giải đấu *</label>
+            <input id="ct-title" type="text" placeholder="VD: CS16 VN Open #1" />
+          </div>
+          <div class="form-group">
+            <label>Tên người tổ chức</label>
+            <input id="ct-organizer" type="text" placeholder="Tên hiển thị" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Thể thức thi đấu</label>
+              <select id="ct-format">
+                <option value="1vs1">1 vs 1</option>
+                <option value="3vs3">3 vs 3</option>
+                <option value="5vs5" selected>5 vs 5</option>
+                <option value="10vs10">10 vs 10</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quy ước round</label>
+              <select id="ct-rounds">
+                <option value="5round">5 round - thắng 3/5</option>
+                <option value="10round">10 round - thắng 8/10</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Số người / map</label>
+              <input id="ct-ppm" type="number" value="5" min="1" max="10" />
+            </div>
+            <div class="form-group">
+              <label>Phí đăng ký (credits)</label>
+              <input id="ct-fee" type="number" value="0" min="0" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Danh sách map (chọn nhiều)</label>
+            <div class="map-checkboxes">
+              <label><input type="checkbox" value="de_dust2" checked> Dust 2</label>
+              <label><input type="checkbox" value="de_inferno"> Inferno</label>
+              <label><input type="checkbox" value="de_nuke"> Nuke</label>
+              <label><input type="checkbox" value="cs_italy"> Italy</label>
+              <label><input type="checkbox" value="cs_assault"> Assault</label>
+              <label><input type="checkbox" value="de_train"> Train</label>
+              <label><input type="checkbox" value="de_mirage"> Mirage</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mô tả giải đấu</label>
+            <textarea id="ct-desc" rows="3" placeholder="Mô tả ngắn về giải đấu..."></textarea>
+          </div>
+          <div id="ct-msg" class="form-success hidden"></div>
+          <div id="ct-error" class="form-error"></div>
+          <button class="btn-primary" onclick="createTournament()">🏅 TẠO GIẢI ĐẤU</button>
+        </div>
+      </div>
+
+      <!-- PAGE: DONATE -->
+      <div id="page-donate" class="page">
+        <div class="page-header"><h2>💖 DONATE ỦNG HỘ</h2></div>
+        <div class="donate-tabs">
+          <button class="donate-tab active" id="dtab-dev" onclick="switchDonateTab('dev')">💻 Nhà phát triển</button>
+          <button class="donate-tab" id="dtab-tour" onclick="switchDonateTab('tour')">🏅 Giải đấu</button>
+        </div>
+        <div id="donate-dev" class="donate-section">
+          <div class="donate-info-box">
+            <h3>Ủng hộ nhà phát triển</h3>
+            <p>Mọi khoản donate giúp duy trì và phát triển hệ thống CS16 VN.</p>
+          </div>
+          <div class="form-card">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số tiền (VND)</label>
+                <input id="donate-dev-amount" type="number" placeholder="50000" min="10000" />
+              </div>
+              <div class="form-group">
+                <label>Tên của bạn</label>
+                <input id="donate-dev-name" type="text" placeholder="Để trống = Anonymous" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Lời nhắn</label>
+              <input id="donate-dev-msg" type="text" placeholder="GG server đỉnh!" />
+            </div>
+            <div class="form-group">
+              <label>📎 Bằng chứng thanh toán (ảnh chụp màn hình)</label>
+              <input type="file" id="donate-dev-proof" accept="image/*" />
+            </div>
+            <div id="donate-dev-qr" class="donate-qr hidden"></div>
+            <div id="donate-dev-msg-out" class="form-success hidden"></div>
+            <button class="btn-primary" onclick="submitDonate('developer')">💖 GỬI DONATE</button>
+          </div>
+        </div>
+        <div id="donate-tour" class="donate-section hidden">
+          <div class="donate-info-box">
+            <h3>Ủng hộ giải đấu</h3>
+            <p>Donate cho giải đấu cụ thể để tăng prize pool.</p>
+          </div>
+          <div class="form-card">
+            <div class="form-group">
+              <label>Chọn giải đấu</label>
+              <select id="donate-tour-select"><option value="">-- Đang tải... --</option></select>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Số tiền (VND)</label>
+                <input id="donate-tour-amount" type="number" placeholder="50000" min="10000" />
+              </div>
+              <div class="form-group">
+                <label>Tên của bạn</label>
+                <input id="donate-tour-name" type="text" placeholder="Để trống = Anonymous" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>📎 Bằng chứng thanh toán</label>
+              <input type="file" id="donate-tour-proof" accept="image/*" />
+            </div>
+            <div id="donate-tour-msg-out" class="form-success hidden"></div>
+            <button class="btn-primary" onclick="submitDonate('tournament')">🏅 DONATE GIẢI ĐẤU</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: HƯỚNG DẪN & GÓP Ý -->
+      <div id="page-help" class="page">
+        <div class="page-header"><h2>❓ HƯỚNG DẪN & GÓP Ý</h2></div>
+        <div class="help-tabs">
+          <button class="help-tab active" id="htab-guide" onclick="switchHelpTab('guide')">📖 Hướng dẫn</button>
+          <button class="help-tab" id="htab-feedback" onclick="switchHelpTab('feedback')">💬 Góp ý</button>
+        </div>
+        <div id="help-guide" class="help-section">
+          <div class="amx-commands">
+            <h3>⌨️ Lệnh AMX Mod X trong game</h3>
+            <table class="cmd-table">
+              <thead><tr><th>Lệnh</th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr><td><code>say /stats</code></td><td>Xem thống kê cá nhân (K/D, Win rate)</td></tr>
+                <tr><td><code>say /top10</code></td><td>Xem top 10 người chơi</td></tr>
+                <tr><td><code>say /me</code></td><td>Thông tin bản thân</td></tr>
+                <tr><td><code>say /votemap</code></td><td>Bình chọn đổi map</td></tr>
+                <tr><td><code>say /rtv</code></td><td>Rock The Vote — yêu cầu đổi map ngay</td></tr>
+                <tr><td><code>say /nominate</code></td><td>Đề cử map cho vòng tiếp theo</td></tr>
+                <tr><td><code>say /thetime</code></td><td>Xem giờ còn lại trong map</td></tr>
+                <tr><td><code>+speed</code></td><td>Chạy nhanh (nếu server cho phép)</td></tr>
+                <tr><td><code>say /credits</code></td><td>Xem số credits của bạn</td></tr>
+              </tbody>
+            </table>
+            <h3 style="margin-top:20px">🔧 Lệnh Admin (chỉ admin)</h3>
+            <table class="cmd-table">
+              <thead><tr><th>Lệnh</th><th>Mô tả</th></tr></thead>
+              <tbody>
+                <tr><td><code>amx_kick &lt;player&gt;</code></td><td>Kick người chơi</td></tr>
+                <tr><td><code>amx_ban &lt;player&gt; &lt;mins&gt;</code></td><td>Ban người chơi</td></tr>
+                <tr><td><code>amx_map &lt;mapname&gt;</code></td><td>Đổi map ngay</td></tr>
+                <tr><td><code>amx_rcon &lt;cmd&gt;</code></td><td>Chạy lệnh RCON từ game chat</td></tr>
+                <tr><td><code>amx_say &lt;msg&gt;</code></td><td>Gửi thông báo toàn server</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="help-feedback" class="help-section hidden">
+          <div class="form-card">
+            <div class="form-group">
+              <label>Loại góp ý</label>
+              <select id="fb-type">
+                <option value="suggestion">💡 Gợi ý cải thiện</option>
+                <option value="bug">🐛 Báo lỗi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Nội dung</label>
+              <textarea id="fb-content" rows="5" placeholder="Mô tả chi tiết góp ý hoặc lỗi gặp phải..."></textarea>
+            </div>
+            <div id="fb-msg" class="form-success hidden"></div>
+            <div id="fb-error" class="form-error"></div>
+            <button class="btn-primary" onclick="submitFeedback()">📨 GỬI GÓP Ý</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE: GIỚI THIỆU -->
+      <div id="page-about" class="page">
+        <div class="page-header"><h2>ℹ️ GIỚI THIỆU</h2></div>
+        <div class="about-card">
+          <div class="about-logo">🎮</div>
+          <h2>Modern CS 1.6 VN</h2>
+          <div class="about-version">Phiên bản: <strong>v1.0.0-beta</strong></div>
+          <p class="about-desc">Hệ thống launcher và quản lý server Counter-Strike 1.6 cho cộng đồng Việt Nam. Hỗ trợ giải đấu, xếp hạng, và quản lý người chơi.</p>
+          <div class="about-stats" id="about-stats">
+            <div class="about-stat"><span id="astat-players">–</span><label>Người chơi</label></div>
+            <div class="about-stat"><span id="astat-servers">6</span><label>Máy chủ</label></div>
+            <div class="about-stat"><span id="astat-kills">–</span><label>Tổng kills</label></div>
+            <div class="about-stat"><span id="astat-tours">–</span><label>Giải đấu</label></div>
+          </div>
+          <div class="about-info">
+            <div class="info-row"><span>🖥️ API Server</span><span id="ainfo-api">–</span></div>
+            <div class="info-row"><span>🗄️ Database</span><span>PostgreSQL 16</span></div>
+            <div class="info-row"><span>🎮 Game Engine</span><span>GoldSrc / ReHLDS</span></div>
+            <div class="info-row"><span>🔧 AMX Mod X</span><span>v1.10</span></div>
+            <div class="info-row"><span>⚡ Launcher</span><span>Electron v33</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </div><!-- /screen-main -->
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- SPECTATOR CHAT OVERLAY -->
+  <div id="spec-chat-overlay" class="spec-chat-overlay hidden">
+    <div class="spec-chat-panel">
+      <div class="spec-chat-header">
+        <span id="spec-chat-title">💬 Chat Spectator</span>
+        <button class="spec-chat-close" onclick="closeSpecChat()">✕</button>
+      </div>
+      <div id="spec-chat-messages" class="spec-chat-messages">
+        <p class="spec-chat-empty">Chưa có tin nhắn.<br><small>Chat chỉ hiển thị cho spectators — không ảnh hưởng người chơi trong game.</small></p>
+      </div>
+      <div class="spec-chat-footer">
+        <input id="spec-chat-input" class="spec-chat-input" type="text"
+          placeholder="Nhập tin nhắn..." maxlength="200" />
+        <button class="spec-chat-send" onclick="sendSpecChat()">Gửi</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

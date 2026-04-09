@@ -1,0 +1,253 @@
+@page
+@model Dashboard.Pages.ServersModel
+@{
+    ViewData["Title"] = "Quản Lý Máy Chủ";
+    ViewData["ActivePage"] = "Servers";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="bi bi-hdd-network-fill me-2 text-warning"></i>Quản Lý Máy Chủ</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+        <i class="bi bi-plus-lg me-1"></i>Thêm Server
+    </button>
+</div>
+
+<div class="row g-3 mb-4" id="serverCards">
+    @foreach (var s in Model.Servers)
+    {
+        <div class="col-md-6 col-xl-4" id="card-@s.Id">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">@s.Name</span>
+                    @if (s.IsActive)
+                    {
+                        <span class="badge bg-success"><i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Online</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Offline</span>
+                    }
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <small class="text-muted">Địa chỉ</small><br>
+                        <code class="text-warning">@s.Host:@s.Port</code>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Map hiện tại</small><br>
+                        <span class="badge bg-dark border border-secondary text-light">
+                            <i class="bi bi-map me-1"></i>@s.CurrentMap
+                        </span>
+                    </div>
+                    <div class="mb-2">
+                        <small class="text-muted">Max players</small>
+                        <span class="float-end text-info">@s.MaxPlayers</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(s.Description))
+                    {
+                        <p class="text-muted small mb-0">@s.Description</p>
+                    }
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-warning flex-fill"
+                            onclick="openEdit(@s.Id, '@s.Name', '@s.Host', @s.Port, '@s.CurrentMap', '@s.Description', @s.MaxPlayers, @s.IsActive.ToString().ToLower())">
+                        <i class="bi bi-pencil-fill me-1"></i>Sửa
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger"
+                            onclick="deleteServer(@s.Id, '@s.Name')">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (!Model.Servers.Any())
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-hdd-network display-4"></i>
+        <p class="mt-2">Chưa có server nào. Nhấn "Thêm Server" để bắt đầu.</p>
+    </div>
+}
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title"><i class="bi bi-plus-circle me-2 text-warning"></i>Thêm Server Mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-muted">Tên Server</label>
+              <input type="text" id="cName" class="form-control bg-dark text-light border-secondary" placeholder="🇮🇹 Italy #1" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">Host / IP</label>
+              <input type="text" id="cHost" class="form-control bg-dark text-light border-secondary" placeholder="192.168.1.2" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Port</label>
+              <input type="number" id="cPort" class="form-control bg-dark text-light border-secondary" value="27015" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Map</label>
+              <input type="text" id="cMap" class="form-control bg-dark text-light border-secondary" placeholder="cs_italy" required />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-muted">Max Players</label>
+              <input type="number" id="cMaxPlayers" class="form-control bg-dark text-light border-secondary" value="32" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">RCON Password</label>
+              <input type="password" id="cRcon" class="form-control bg-dark text-light border-secondary" placeholder="(tùy chọn)" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted">Mô tả</label>
+              <input type="text" id="cDesc" class="form-control bg-dark text-light border-secondary" placeholder="Server vui vẻ" />
+            </div>
+            <div class="col-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="cActive" checked />
+                <label class="form-check-label text-muted" for="cActive">Kích hoạt server</label>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn btn-primary" id="btnCreate"><i class="bi bi-plus-lg me-1"></i>Tạo Server</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-warning"></i>Cập Nhật Server</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId" />
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label text-muted">Tên Server</label>
+            <input type="text" id="editName" class="form-control bg-dark text-light border-secondary" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-muted">Host / IP</label>
+            <input type="text" id="editHost" class="form-control bg-dark text-light border-secondary" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label text-muted">Port</label>
+            <input type="number" id="editPort" class="form-control bg-dark text-light border-secondary" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label text-muted">Map</label>
+            <input type="text" id="editMap" class="form-control bg-dark text-light border-secondary" />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label text-muted">Max Players</label>
+            <input type="number" id="editMaxPlayers" class="form-control bg-dark text-light border-secondary" value="32" />
+          </div>
+          <div class="col-12">
+            <label class="form-label text-muted">Mô tả</label>
+            <input type="text" id="editDesc" class="form-control bg-dark text-light border-secondary" />
+          </div>
+          <div class="col-12">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="editActive" checked />
+              <label class="form-check-label text-muted" for="editActive">Kích hoạt server</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn btn-primary" onclick="saveEdit()"><i class="bi bi-save me-1"></i>Lưu thay đổi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+<script>
+const API = '@Model.PublicApiUrl';
+
+// ── CREATE ────────────────────────────────────────────────────────────────────
+document.getElementById('createModal')?.addEventListener('show.bs.modal', () => {
+    document.getElementById('createForm').reset?.();
+});
+
+document.getElementById('btnCreate')?.addEventListener('click', async () => {
+    const body = {
+        name:        document.getElementById('cName').value,
+        host:        document.getElementById('cHost').value,
+        port:        parseInt(document.getElementById('cPort').value),
+        currentMap:  document.getElementById('cMap').value,
+        rconPassword:document.getElementById('cRcon').value,
+        description: document.getElementById('cDesc').value,
+        maxPlayers:  parseInt(document.getElementById('cMaxPlayers').value),
+        isActive:    document.getElementById('cActive').checked
+    };
+    const r = await fetch(`${API}/api/servers`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+    });
+    if (r.ok) { location.reload(); }
+    else { alert('Lỗi tạo server: ' + await r.text()); }
+});
+
+// ── EDIT ──────────────────────────────────────────────────────────────────────
+function openEdit(id, name, host, port, map, desc, maxPlayers, isActive) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editHost').value = host;
+    document.getElementById('editPort').value = port;
+    document.getElementById('editMap').value = map;
+    document.getElementById('editDesc').value = desc;
+    document.getElementById('editMaxPlayers').value = maxPlayers;
+    document.getElementById('editActive').checked = isActive;
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+async function saveEdit() {
+    const id = document.getElementById('editId').value;
+    const body = {
+        name:        document.getElementById('editName').value,
+        host:        document.getElementById('editHost').value,
+        port:        parseInt(document.getElementById('editPort').value),
+        currentMap:  document.getElementById('editMap').value,
+        rconPassword:'',
+        description: document.getElementById('editDesc').value,
+        maxPlayers:  parseInt(document.getElementById('editMaxPlayers').value),
+        isActive:    document.getElementById('editActive').checked
+    };
+    const r = await fetch(`${API}/api/servers/${id}`, {
+        method:'PUT', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(body)
+    });
+    if (r.ok) { location.reload(); }
+    else { alert('Lỗi cập nhật: ' + await r.text()); }
+}
+
+// ── DELETE ────────────────────────────────────────────────────────────────────
+async function deleteServer(id, name) {
+    if (!confirm(`Xóa server "${name}"?`)) return;
+    const r = await fetch(`${API}/api/servers/${id}`, { method:'DELETE' });
+    if (r.ok) {
+        document.getElementById('card-' + id)?.remove();
+    } else {
+        alert('Lỗi xóa server');
+    }
+}
+</script>
+}

@@ -1,0 +1,27 @@
+# Downloads folder - chứa tài nguyên tải về, không commit lên git
+downloads/
+
+# .NET build artifacts
+src/*/bin/
+src/*/obj/
+
+# Secrets
+.env
+
+# macOS
+.DS_Store
+**/.DS_Store
+._*
+**/._*
+
+# PostgreSQL data
+database/pgdata/
+
+# Uploaded files (KYC, etc)
+uploads/
+
+# Electron build output (binary quá lớn cho GitHub)
+publish/
+
+# Node modules
+src/ElectronLauncher/node_modules/

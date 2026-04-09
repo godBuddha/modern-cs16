@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
+    <PackageReference Include="Veldrid" Version="4.9.0" />
+    <PackageReference Include="Veldrid.ImageSharp" Version="4.9.0" />
+    <PackageReference Include="Veldrid.SDL2" Version="4.9.0" />
+    <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Shaders\imgui-vertex.glsl" />
+    <EmbeddedResource Include="Shaders\imgui-vertex-legacy.glsl" />
+    <EmbeddedResource Include="Shaders\imgui-frag.glsl" />
+  </ItemGroup>
+
+  <!-- macOS: auto-install SDL2 via Homebrew -->
+  <Target Name="InstallSDL2OnMac" BeforeTargets="BeforeBuild" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">
+    <Exec Command="sh -c 'if ! brew list sdl2 &gt; /dev/null 2&gt;&amp;1; then brew install sdl2; fi'" ContinueOnError="true" />
+  </Target>
+
+  <!-- Linux: auto-install SDL2 via apt -->
+  <Target Name="InstallSDL2OnLinux" BeforeTargets="BeforeBuild" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">
+    <Exec Command="sh -c 'if ! ldconfig -p | grep -q libSDL2; then sudo apt-get install -y libsdl2-2.0-0 libsdl2-dev; fi'" ContinueOnError="true" />
+  </Target>
+
+  <!-- Windows: download SDL2.dll if missing -->
+  <Target Name="PrepareSDL2OnWindows" BeforeTargets="BeforeBuild" Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">
+    <PropertyGroup>
+      <Sdl2DllPath>$(OutputPath)SDL2.dll</Sdl2DllPath>
+      <Sdl2DllUrl>https://github.com/libsdl-org/SDL/releases/download/release-2.30.9/SDL2-2.30.9-win32-x64.zip</Sdl2DllUrl>
+    </PropertyGroup>
+    <Exec Command="powershell -NoProfile -Command &quot;if (!(Test-Path '$(Sdl2DllPath)')) { Invoke-WebRequest '$(Sdl2DllUrl)' -OutFile '$env:TEMP\sdl2.zip'; Expand-Archive '$env:TEMP\sdl2.zip' '$env:TEMP\sdl2'; Copy-Item '$env:TEMP\sdl2\SDL2.dll' '$(OutputPath)'; Remove-Item '$env:TEMP\sdl2*' -Recurse -Force }&quot;" ContinueOnError="true" />
+  </Target>
+
+</Project>

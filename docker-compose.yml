@@ -1,0 +1,242 @@
+services:
+  # ── CS 1.6 Game Servers ──────────────────────────────────────────────────────
+  cs-italy-1:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-italy-1
+    platform: linux/amd64
+    ports:
+      - "27015:27015/udp"
+      - "27015:27015/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27015
+      - SV_MAP=cs_italy
+      - SV_NAME=🇮🇹 Italy #1 | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-italy.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  cs-italy-2:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-italy-2
+    platform: linux/amd64
+    ports:
+      - "27016:27016/udp"
+      - "27016:27016/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27016
+      - SV_MAP=cs_italy
+      - SV_NAME=🇮🇹 Italy #2 | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-italy.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  cs-italy-3:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-italy-3
+    platform: linux/amd64
+    ports:
+      - "27017:27017/udp"
+      - "27017:27017/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27017
+      - SV_MAP=cs_italy
+      - SV_NAME=🇮🇹 Italy #3 | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-italy.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  cs-dust2:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-dust2
+    platform: linux/amd64
+    ports:
+      - "27018:27018/udp"
+      - "27018:27018/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27018
+      - SV_MAP=de_dust2
+      - SV_NAME=💣 Dust2 | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-dust2.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  cs-inferno:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-inferno
+    platform: linux/amd64
+    ports:
+      - "27019:27019/udp"
+      - "27019:27019/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27019
+      - SV_MAP=de_inferno
+      - SV_NAME=🔥 Inferno | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-inferno.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  cs-nuke:
+    build:
+      context: ./server-data
+      dockerfile: Dockerfile
+    container_name: cs16-nuke
+    platform: linux/amd64
+    ports:
+      - "27020:27020/udp"
+      - "27020:27020/tcp"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: [game]
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - SV_PORT=27020
+      - SV_MAP=de_nuke
+      - SV_NAME=☢️ Nuke | CS 1.6 VN
+      - SV_MAXPLAYERS=32
+      - SV_LAN=0
+    volumes:
+      - ./server-data/configs/mapcycle-nuke.txt:/root/hlds/cstrike/mapcycle.txt:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/plugins.ini:/root/hlds/cstrike/addons/amxmodx/configs/plugins.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/configs/modules.ini:/root/hlds/cstrike/addons/amxmodx/configs/modules.ini:ro
+      - ./server-data/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:/root/hlds/cstrike/addons/amxmodx/plugins/cs16_bridge.amxx:ro
+      - ./server-data/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:/root/hlds/cstrike/addons/amxmodx/modules/easy_http_amxx_i386.so:ro
+
+  api:
+    build:
+      context: ./src/Api
+    ports:
+      - "7777:7777"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - JWT_SECRET=${JWT_SECRET}
+      - RCON_PASSWORD=${RCON_PASSWORD}
+      - API_PORT=7777
+      - CS16_IMAGE=cs16vn/gameserver:latest
+      - CS16_NETWORK=modern-cs16_default
+      - CS16_PROJECT_DIR=/Volumes/PortableSSD/Congviec/modern-cs16
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  dashboard:
+    build:
+      context: ./src
+      dockerfile: Dashboard/Dockerfile
+    ports:
+      - "7001:7001"
+    depends_on:
+      - api
+    restart: unless-stopped
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - API_URL=http://api:7777
+      - PUBLIC_API_URL=http://localhost:7777
+      - DASHBOARD_PORT=7001
+
+  postgres-db:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  nginx-fastdl:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./server-data/cstrike:/data/cstrike:ro
+      - ./nginx-fastdl/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  pgdata:

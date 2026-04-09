@@ -1,0 +1,80 @@
+@page
+@model PlayersModel
+@{
+    ViewData["Title"] = "Players";
+    ViewData["ActivePage"] = "Players";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="m-0"><i class="bi bi-people-fill me-2 text-warning"></i>Quản lý Players</h4>
+    <span class="text-muted">Tổng: @Model.Players.Count players</span>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex gap-2">
+        <input type="text" id="searchInput" class="form-control form-control-sm bg-dark text-light border-secondary" 
+               placeholder="Tìm theo tên..." style="max-width:200px;" onkeyup="filterTable()" />
+        <select id="filterBanned" class="form-select form-select-sm bg-dark text-light border-secondary" style="max-width:150px;" onchange="filterTable()">
+            <option value="">Tất cả</option>
+            <option value="false">Đang hoạt động</option>
+            <option value="true">Bị banned</option>
+        </select>
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0" id="playersTable">
+            <thead>
+                <tr>
+                    <th>#</th><th>Tên</th><th>ELO</th><th>K/D/HS</th>
+                    <th>Credits</th><th>KYC</th><th>Trạng thái</th><th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var (p, i) in Model.Players.Select((x, i) => (x, i)))
+            {
+                var kycStatus = Model.KycMap.GetValueOrDefault(p.PlayerId, "NotSubmitted");
+                <tr data-name="@p.DisplayName.ToLower()" data-banned="@p.IsBanned.ToString().ToLower()">
+                    <td class="text-muted">@(i+1)</td>
+                    <td class="fw-bold">@p.DisplayName</td>
+                    <td class="text-warning">@p.EloScore.ToString("F0")</td>
+                    <td>@p.Kills / @p.Deaths / @p.Headshots</td>
+                    <td>@p.Credits.ToString("N0")</td>
+                    <td>
+                        @if (kycStatus == "Approved") { <span class="badge bg-success">✓ Xác minh</span> }
+                        else if (kycStatus == "Pending") { <span class="badge bg-warning text-dark">Chờ</span> }
+                        else { <span class="badge bg-secondary">Chưa KYC</span> }
+                    </td>
+                    <td>
+                        @if (p.IsBanned) { <span class="badge bg-danger">BANNED</span> }
+                        else { <span class="badge bg-success">Active</span> }
+                    </td>
+                    <td>
+                        <form method="post" asp-page-handler="ToggleBan" class="d-inline">
+                            <input type="hidden" name="playerId" value="@p.PlayerId" />
+                            <input type="hidden" name="banned" value="@(!p.IsBanned)" />
+                            <button type="submit" class="btn btn-sm @(p.IsBanned ? "btn-outline-success" : "btn-outline-danger")">
+                                @(p.IsBanned ? "Unban" : "Ban")
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function filterTable() {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const banned = document.getElementById('filterBanned').value;
+    document.querySelectorAll('#playersTable tbody tr').forEach(row => {
+        const name = row.dataset.name || '';
+        const isBanned = row.dataset.banned || '';
+        const nameMatch = name.includes(search);
+        const bannedMatch = banned === '' || isBanned === banned;
+        row.style.display = nameMatch && bannedMatch ? '' : 'none';
+    });
+}
+</script>
+}

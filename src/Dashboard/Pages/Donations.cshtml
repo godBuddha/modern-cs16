@@ -1,0 +1,116 @@
+@page
+@model Dashboard.Pages.DonationsModel
+@{
+    ViewData["Title"] = "Lịch Sử Donate";
+    ViewData["ActivePage"] = "Donations";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="m-0"><i class="bi bi-cash-coin me-2 text-success"></i>Lịch Sử Donate</h4>
+    <div>
+        <form method="get" class="d-inline-flex gap-2 align-items-center">
+            <label class="text-muted small">Lọc:</label>
+            <select name="status" class="form-select form-select-sm" style="width:140px" onchange="this.form.submit()">
+                <option value="" selected="@(Model.StatusFilter == "" ? "selected" : null)">Tất cả</option>
+                <option value="Pending"   selected="@(Model.StatusFilter == "Pending"   ? "selected" : null)">Đang chờ</option>
+                <option value="Confirmed" selected="@(Model.StatusFilter == "Confirmed" ? "selected" : null)">Đã xác nhận</option>
+                <option value="Rejected"  selected="@(Model.StatusFilter == "Rejected"  ? "selected" : null)">Từ chối</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-check-circle-fill text-success me-1"></i>Tổng đã xác nhận</div>
+            <div class="stat-number text-success">@Model.TotalConfirmed.ToString("N0")đ</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-hourglass-split text-warning me-1"></i>Đang chờ</div>
+            <div class="stat-number text-warning">@Model.PendingCount</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-people me-1"></i>Lượt donate</div>
+            <div class="stat-number">@Model.TotalCount</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Người donate</th>
+                    <th>Số tiền</th>
+                    <th>Loại donate</th>
+                    <th>Lời nhắn</th>
+                    <th>Thời gian</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var d in Model.Donations)
+            {
+                <tr>
+                    <td class="fw-semibold">@d.PlayerName</td>
+                    <td class="text-success fw-bold">@d.Amount.ToString("N0")đ</td>
+                    <td>
+                        @if (d.DonationType == "tournament")
+                        {
+                            <span class="badge bg-warning text-dark">🏅 Giải đấu</span>
+                            @if (!string.IsNullOrEmpty(d.TournamentName))
+                            {
+                                <span class="text-muted small"> — @d.TournamentName</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="badge bg-info text-dark">💻 Nhà phát triển</span>
+                        }
+                    </td>
+                    <td class="text-muted small">@(d.Message ?? "—")</td>
+                    <td class="text-muted small">@d.CreatedAt.AddHours(7).ToString("HH:mm dd/MM/yy")</td>
+                    <td>
+                        @if (d.Status == "Confirmed")
+                        {
+                            <span class="badge bg-success">Đã xác nhận</span>
+                        }
+                        else if (d.Status == "Rejected")
+                        {
+                            <span class="badge bg-danger">Từ chối</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Đang chờ</span>
+                        }
+                    </td>
+                    <td>
+                        @if (d.Status == "Pending")
+                        {
+                            <form method="post" asp-page-handler="Confirm" class="d-inline">
+                                <input type="hidden" name="id" value="@d.Id" />
+                                <button class="btn btn-xs btn-success py-0 px-2" type="submit">✓</button>
+                            </form>
+                            <form method="post" asp-page-handler="Reject" class="d-inline ms-1">
+                                <input type="hidden" name="id" value="@d.Id" />
+                                <button class="btn btn-xs btn-danger py-0 px-2" type="submit">✗</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (!Model.Donations.Any())
+            {
+                <tr><td colspan="7" class="text-center text-muted py-4">Chưa có lịch sử donate</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

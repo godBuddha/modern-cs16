@@ -1,0 +1,91 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Tổng quan";
+    ViewData["ActivePage"] = "Index";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="m-0"><i class="bi bi-speedometer2 me-2 text-warning"></i>Tổng quan hệ thống</h4>
+    <small class="text-muted">Cập nhật: @DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy")</small>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-people-fill me-1"></i>Tổng players</div>
+            <div class="stat-number">@Model.TotalPlayers</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-award-fill me-1"></i>Giải đấu đang mở</div>
+            <div class="stat-number">@Model.OpenTournaments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-cash-coin me-1"></i>Tổng donate (xác nhận)</div>
+            <div class="stat-number">@Model.TotalDonations.ToString("N0")đ</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted mb-1"><i class="bi bi-person-vcard me-1"></i>KYC chờ duyệt</div>
+            <div class="stat-number text-warning">@Model.PendingKyc</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-trophy me-2"></i>Top 5 Players</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>#</th><th>Tên</th><th>ELO</th><th>K/D</th></tr></thead>
+                    <tbody>
+                    @foreach (var (p, i) in Model.TopPlayers.Select((x, i) => (x, i)))
+                    {
+                        <tr>
+                            <td>
+                                @if (i == 0) { <span class="badge badge-rank1">🥇</span> }
+                                else if (i == 1) { <span class="badge badge-rank2">🥈</span> }
+                                else if (i == 2) { <span class="badge badge-rank3">🥉</span> }
+                                else { <span class="text-muted">@(i+1)</span> }
+                            </td>
+                            <td>@p.DisplayName</td>
+                            <td class="text-warning fw-bold">@p.EloScore.ToString("F0")</td>
+                            <td>@(p.Deaths > 0 ? Math.Round((double)p.Kills / p.Deaths, 2) : p.Kills)</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-clock-history me-2"></i>Donate gần đây</div>
+            <div class="card-body p-0">
+                <table class="table mb-0">
+                    <thead><tr><th>Người</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
+                    <tbody>
+                    @foreach (var d in Model.RecentDonations)
+                    {
+                        <tr>
+                            <td>@d.PlayerName</td>
+                            <td class="text-success">@d.Amount.ToString("N0")đ</td>
+                            <td>
+                                @if (d.Status == "Confirmed") { <span class="badge bg-success">✓</span> }
+                                else if (d.Status == "Rejected") { <span class="badge bg-danger">✗</span> }
+                                else { <span class="badge bg-warning text-dark">Chờ</span> }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

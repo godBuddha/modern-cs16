@@ -1,0 +1,101 @@
+@page
+@model TournamentsModel
+@{
+    ViewData["Title"] = "Quản lý Giải Đấu";
+    ViewData["ActivePage"] = "Tournaments";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4><i class="bi bi-award-fill me-2 text-warning"></i>Quản lý Giải Đấu</h4>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createTModal"><i class="bi bi-plus-lg me-1"></i>Tạo Giải Mới</button>
+</div>
+
+<!-- Modal Create -->
+<div class="modal fade text-dark" id="createTModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content text-light bg-dark border-secondary">
+      <form method="post" asp-page-handler="Create">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">Tạo Giải Đấu</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Tên Giải Đấu</label>
+          <input type="text" name="Title" class="form-control bg-dark text-light border-secondary" required />
+        </div>
+        <div class="row">
+          <div class="col-4 mb-3">
+            <label class="form-label">Phí tham gia (Credits)</label>
+            <input type="number" name="EntryFee" class="form-control bg-dark text-light border-secondary" value="0" />
+          </div>
+          <div class="col-4 mb-3">
+            <label class="form-label">Tổng Giải Thưởng (VNĐ)</label>
+            <input type="number" name="PrizePool" class="form-control bg-dark text-light border-secondary" value="0" />
+          </div>
+          <div class="col-4 mb-3">
+            <label class="form-label">Số người tối đa</label>
+            <input type="number" name="MaxPlayers" class="form-control bg-dark text-light border-secondary" value="16" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+        <button type="submit" class="btn btn-primary">Lưu</button>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-dark table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-3">TÊN GIẢI</th>
+                    <th>TRẠNG THÁI</th>
+                    <th>PHÍ / GIẢI THƯỞNG</th>
+                    <th>PLAYERS</th>
+                    <th>NGÀY TẠO</th>
+                    <th class="text-end pe-3">HÀNH ĐỘNG</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var t in Model.Tournaments)
+                {
+                    <tr>
+                        <td class="ps-3 fw-bold text-light">@t.Title</td>
+                        <td>
+                            <span class="badge @(t.Status == "Open" ? "bg-success" : (t.Status == "Ongoing" ? "bg-warning text-dark" : "bg-danger"))">@t.Status</span>
+                        </td>
+                        <td>
+                            <div>Phí: <span class="text-info">@t.EntryFee Cr</span></div>
+                            <div>Thưởng: <span class="text-warning">@t.PrizePool.ToString("N0") đ</span></div>
+                        </td>
+                        <td>
+                            @{ var rCount = Model.RegCounts.ContainsKey(t.Id) ? Model.RegCounts[t.Id] : 0; }
+                            <span class="badge bg-info">@rCount / @t.MaxPlayers</span>
+                        </td>
+                        <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-end pe-3 align-middle">
+                            <form method="post" class="d-inline" asp-page-handler="UpdateStatus">
+                                <input type="hidden" name="Id" value="@t.Id" />
+                                <select name="Status" class="form-select form-select-sm bg-dark text-light border-secondary d-inline w-auto" onchange="this.form.submit()">
+                                    <option value="Open" selected="@(t.Status == "Open")">Open</option>
+                                    <option value="Ongoing" selected="@(t.Status == "Ongoing")">Ongoing</option>
+                                    <option value="Finished" selected="@(t.Status == "Finished")">Finished</option>
+                                    <option value="Cancelled" selected="@(t.Status == "Cancelled")">Cancelled</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                @if(!Model.Tournaments.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">Chưa có giải đấu nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

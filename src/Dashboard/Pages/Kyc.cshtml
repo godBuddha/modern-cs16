@@ -1,0 +1,61 @@
+@page
+@model KycModel
+@{
+    ViewData["Title"] = "KYC Queue";
+    ViewData["ActivePage"] = "Kyc";
+}
+
+<h4 class="mb-4"><i class="bi bi-person-vcard-fill me-2 text-warning"></i>KYC Review Queue
+    <span class="badge bg-warning text-dark ms-2">@Model.Queue.Count chờ duyệt</span>
+</h4>
+
+@if (!Model.Queue.Any())
+{
+    <div class="card"><div class="card-body text-center text-muted py-5"><i class="bi bi-check-circle display-4 d-block mb-2"></i>Không có hồ sơ nào chờ duyệt</div></div>
+}
+
+@foreach (var kyc in Model.Queue)
+{
+    <div class="card mb-3" id="kyc-@kyc.Id">
+        <div class="card-header d-flex justify-content-between">
+            <span><i class="bi bi-person me-1"></i><strong>@kyc.PlayerId</strong></span>
+            <small class="text-muted">Nộp lúc: @kyc.SubmittedAt.ToLocalTime().ToString("HH:mm dd/MM")</small>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-muted">Ảnh CCCD</h6>
+                    @if (kyc.CccdImagePath != null)
+                    {
+                        <img src="/api/kyc/@kyc.Id/cccd" class="img-fluid rounded" style="max-height:300px;" 
+                             onerror="this.outerHTML='<span class=text-danger>Không load được ảnh</span>'" />
+                    }
+                    else { <span class="text-muted">Chưa có ảnh</span> }
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-muted">Video Selfie</h6>
+                    @if (kyc.SelfieVideoPath != null)
+                    {
+                        <video controls class="w-100 rounded" style="max-height:300px;">
+                            <source src="/api/kyc/@kyc.Id/video" type="video/mp4" />
+                        </video>
+                    }
+                    else { <span class="text-muted">Chưa có video</span> }
+                </div>
+            </div>
+
+            <div class="mt-3 d-flex gap-2">
+                <form method="post" asp-page-handler="Approve" class="d-inline">
+                    <input type="hidden" name="id" value="@kyc.Id" />
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg me-1"></i>Phê duyệt</button>
+                </form>
+                <form method="post" asp-page-handler="Reject" class="d-inline d-flex gap-2">
+                    <input type="hidden" name="id" value="@kyc.Id" />
+                    <input type="text" name="note" class="form-control form-control-sm bg-dark text-light border-secondary" 
+                           placeholder="Lý do từ chối..." style="width:200px;" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-x-lg me-1"></i>Từ chối</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}

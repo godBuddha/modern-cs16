@@ -1,0 +1,47 @@
+{
+  "name": "cs16-vn-launcher",
+  "version": "1.0.0-beta",
+  "description": "CS 1.6 VN Modern Launcher",
+  "author": "CS16 VN Team",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "COPYFILE_DISABLE=1 electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "prebuild": "find . -name \"._*\" -delete 2>/dev/null || true"
+  },
+  "build": {
+    "appId": "com.cs16vn.launcher",
+    "productName": "CS 1.6 VN Launcher",
+    "icon": "assets/icon",
+    "asar": false,
+    "directories": {
+      "output": "../../publish/electron-launcher"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.games"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.0"
+  }
+}

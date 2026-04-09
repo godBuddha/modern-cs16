@@ -1,0 +1,5 @@
+# macOS extended attribute files — block them from Docker build context
+._*
+.DS_Store
+**/.DS_Store
+**/._*
